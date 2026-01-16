@@ -1,179 +1,244 @@
-import React, { useState, useRef } from 'react';
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ﾏﾔﾀﾞﾖチャレンジ</title>
+    <!-- Tailwind CSS for layout -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'M PLUS Rounded 1c', "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+            background: radial-gradient(circle at 50% 50%, #ffffff 0%, #fff0fb 100%);
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+        
+        .dice-slot {
+            transition: transform 0.15s ease-out, opacity 0.15s ease-out, color 0.15s ease-out;
+            background-color: #FFFFFF;
+            width: 5rem;  /* 80px */
+            height: 5rem; /* 80px */
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
 
-const App = () => {
-  // 元のカラーパレットを維持
-  const COLORS = {
-    base: '#FFFFFF',
-    sa: '#4FCFFF',   // 水色
-    ya1: '#FF94F3',  // ピンク
-    ma1: '#42FFF2',  // シアン
-    ma2: '#B197FF',  // 紫
-    ya2: '#4FCFFF'   // 水色
-  };
+        @media (min-width: 768px) {
+            .dice-slot {
+                width: 7rem;  /* 112px */
+                height: 7rem; /* 112px */
+            }
+        }
 
-  // 不正解時の文字色
-  const MISMATCH_COLOR = '#555555';
+        .is-rolling {
+            transform: scale(0.9);
+            opacity: 0.8;
+        }
 
-  // ターゲットを「ﾏ」「ﾔ」「ﾀﾞ」「ﾖ」に変更
-  const DIE_FACES = ['ﾏ', 'ﾔ', 'ﾀﾞ', 'ﾖ'];
-  const TARGET_STRING = ['ﾏ', 'ﾔ', 'ﾀﾞ', 'ﾖ'];
-  
-  // ポジションごとの正解色（元の配置を維持）
-  const POSITION_COLORS = [
-    COLORS.ya1, // ﾏ
-    COLORS.ma2, // ﾔ
-    COLORS.sa,  // ﾀﾞ
-    COLORS.ma1  // ﾖ
-  ];
+        .btn-roll {
+            transition: all 0.2s ease;
+            cursor: pointer;
+            user-select: none;
+        }
 
-  const [dice, setDice] = useState(['？', '？', '？', '？']);
-  const [isRolling, setIsRolling] = useState(false);
-  const [rollCount, setRollCount] = useState(0);
-  const [gameStatus, setGameStatus] = useState('idle');
-  const [history, setHistory] = useState([]);
-  
-  const timerRef = useRef(null);
+        .btn-roll:active {
+            transform: scale(0.9) !important;
+        }
 
-  const rollDice = () => {
-    if (isRolling) return;
-    
-    setIsRolling(true);
-    setGameStatus('rolling');
-    
-    let tick = 0;
-    timerRef.current = setInterval(() => {
-      setDice(prev => prev.map(() => DIE_FACES[Math.floor(Math.random() * DIE_FACES.length)]));
-      tick++;
-      
-      if (tick > 6) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-        finalizeRoll();
-      }
-    }, 40);
-  };
+        .btn-roll:hover {
+            filter: brightness(1.05);
+        }
 
-  const finalizeRoll = () => {
-    const finalDice = Array(4).fill(null).map(() => 
-      DIE_FACES[Math.floor(Math.random() * DIE_FACES.length)]
-    );
-    
-    setDice(finalDice);
-    
-    setRollCount(prev => {
-      const next = prev + 1;
-      const isWin = finalDice.every((face, index) => face === TARGET_STRING[index]);
-      setGameStatus(isWin ? 'won' : 'idle');
-      setHistory(prevH => [{ result: finalDice.join(''), count: next, isWin: isWin }, ...prevH].slice(0, 3));
-      return next;
-    });
+        /* 履歴エリアの高さを固定して、出現時にレイアウトが動かないようにする */
+        #history-wrapper {
+            height: 120px; /* 履歴3件分+余白の高さ */
+            width: 100%;
+            max-width: 320px;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body class="p-4">
 
-    setIsRolling(false);
-  };
-
-  const resetGame = () => {
-    setDice(['？', '？', '？', '？']);
-    setRollCount(0);
-    setGameStatus('idle');
-    setHistory([]);
-  };
-
-  const yumekawaStyle = {
-    fontFamily: '"M PLUS Rounded 1c", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif',
-    background: `radial-gradient(circle at 50% 50%, #ffffff 0%, #fff0fb 100%)`,
-  };
-
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 transition-all duration-300" style={yumekawaStyle}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap');`}</style>
-
-      <div className="text-center mb-10">
-        <h1 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tighter text-slate-700">
-          ﾏﾔﾀﾞﾖチャレンジ
+    <!-- Header -->
+    <div class="text-center mb-10">
+        <h1 class="text-4xl md:text-5xl font-extrabold mb-4 tracking-tighter text-slate-700">
+            ﾏﾔﾀﾞﾖチャレンジ
         </h1>
-        <div className="flex flex-col items-center gap-1">
-          <span className="text-xs font-bold text-slate-400 tracking-widest uppercase">Goal</span>
-          <div className="flex justify-center gap-2 text-2xl font-black tracking-widest drop-shadow-sm">
-            {TARGET_STRING.map((char, i) => (
-              <span key={i} style={{ color: POSITION_COLORS[i] }}>{char}</span>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white/60 backdrop-blur-md p-8 md:p-12 rounded-[3rem] w-full max-w-2xl border-4 border-white shadow-[0_20px_50px_rgba(255,148,243,0.15)] relative">
-        <div className="flex flex-wrap justify-center gap-3 md:gap-6 mb-12">
-          {dice.map((face, index) => {
-            const isMatch = !isRolling && face === TARGET_STRING[index];
-            const charColor = isRolling ? '#ddd' : (isMatch ? POSITION_COLORS[index] : MISMATCH_COLOR);
-            
-            return (
-              <div 
-                key={index}
-                className={`w-20 h-20 md:w-28 md:h-28 flex items-center justify-center text-4xl md:text-6xl font-black rounded-3xl transition-all duration-150 ${isRolling ? 'scale-90 opacity-80' : 'scale-100 opacity-100'}`}
-                style={{ 
-                  backgroundColor: '#FFFFFF',
-                  color: charColor,
-                  boxShadow: isMatch 
-                    ? `0 10px 0 ${charColor}20, inset 0 -4px 0 ${charColor}10` 
-                    : `0 10px 0 #f0f0f0`,
-                  border: `3px solid ${isMatch ? charColor + '40' : '#f8f8f8'}`
-                }}
-              >
-                {face}
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="flex flex-col items-center h-20">
-          {gameStatus === 'won' ? (
-            <button
-              onClick={resetGame}
-              className="px-10 py-4 rounded-full font-black text-xl text-white shadow-lg transition-all active:scale-95"
-              style={{ backgroundColor: COLORS.ma2 }}
-            >
-              もう一度遊ぶ
-            </button>
-          ) : isRolling ? (
-            <div className="px-14 py-5 font-black text-2xl text-slate-300 animate-pulse">
-              ROLLING...
+        <div class="flex flex-col items-center gap-1">
+            <span class="text-xs font-bold text-slate-400 tracking-widest uppercase">Goal</span>
+            <div id="goal-display" class="flex justify-center gap-2 text-2xl font-black tracking-widest drop-shadow-sm">
+                <!-- Goal chars injected by JS -->
             </div>
-          ) : (
-            <button
-              onClick={rollDice}
-              className="px-14 py-5 rounded-full font-black text-2xl text-white shadow-lg transition-all transform active:scale-90 hover:brightness-105"
-              style={{ 
-                backgroundColor: COLORS.ya1,
-                boxShadow: `0 8px 0 ${COLORS.ya1}cc`
-              }}
-            >
-              {rollCount === 0 ? 'START' : 'ROLL'}
-            </button>
-          )}
         </div>
-
-        <div className="mt-10 text-center">
-          <div className="inline-block px-6 py-2 rounded-full bg-white/80 border border-pink-50">
-            <span className="text-pink-300 font-black mr-2 text-xs">COUNT</span>
-            <span className="text-2xl font-black text-slate-600">{rollCount}</span>
-          </div>
-        </div>
-      </div>
-
-      {history.length > 0 && (
-        <div className="mt-8 flex flex-col gap-2 w-full max-w-xs opacity-60">
-          {history.map((item, idx) => (
-            <div key={idx} className="flex justify-between items-center px-4 py-1 text-xs font-bold text-slate-400">
-              <span>#{item.count}</span>
-              <span className="tracking-[0.3em] font-black">{item.result}</span>
-              <div className={`w-2 h-2 rounded-full ${item.isWin ? 'bg-pink-400' : 'bg-slate-200'}`} />
-            </div>
-          ))}
-        </div>
-      )}
     </div>
-  );
-};
 
-export default App;
+    <!-- Game Board -->
+    <div class="bg-white/60 backdrop-blur-md p-8 md:p-12 rounded-[3rem] w-full max-w-2xl border-4 border-white shadow-[0_20px_50px_rgba(255,148,243,0.15)] relative">
+        <div id="dice-container" class="flex flex-wrap justify-center gap-3 md:gap-6 mb-12">
+            <!-- Dice slots injected by JS -->
+        </div>
+
+        <div class="flex flex-col items-center h-20 justify-center">
+            <div id="button-container" class="flex items-center justify-center w-full">
+                <!-- Button injected by JS -->
+            </div>
+        </div>
+
+        <div class="mt-10 text-center">
+            <div class="inline-block px-6 py-2 rounded-full bg-white/80 border border-pink-50">
+                <span class="text-pink-300 font-black mr-2 text-xs">COUNT</span>
+                <span id="count-display" class="text-2xl font-black text-slate-600">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Wrapper (固定領域) -->
+    <div id="history-wrapper" class="flex flex-col items-center">
+        <div id="history-container" class="flex flex-col gap-2 w-full opacity-60">
+            <!-- History logs injected by JS -->
+        </div>
+    </div>
+
+    <script>
+        const COLORS = {
+            sa: '#4FCFFF',   // 水色
+            ya1: '#FF94F3',  // ピンク
+            ma1: '#42FFF2',  // シアン
+            ma2: '#B197FF'   // 紫
+        };
+        const MISMATCH_COLOR = '#555555';
+        const DIE_FACES = ['ﾏ', 'ﾔ', 'ﾀﾞ', 'ﾖ'];
+        const TARGET_STRING = ['ﾏ', 'ﾔ', 'ﾀﾞ', 'ﾖ'];
+        const POSITION_COLORS = [COLORS.ya1, COLORS.ma2, COLORS.sa, COLORS.ma1];
+
+        let dice = ['？', '？', '？', '？'];
+        let isRolling = false;
+        let rollCount = 0;
+        let gameStatus = 'idle'; 
+        let history = [];
+        let timer = null;
+
+        function init() {
+            renderGoal();
+            renderDice();
+            renderButton();
+        }
+
+        function renderGoal() {
+            const container = document.getElementById('goal-display');
+            container.innerHTML = TARGET_STRING.map((char, i) => 
+                `<span style="color: ${POSITION_COLORS[i]}">${char}</span>`
+            ).join('');
+        }
+
+        function renderDice() {
+            const container = document.getElementById('dice-container');
+            container.innerHTML = dice.map((face, index) => {
+                const isMatch = gameStatus !== 'rolling' && face === TARGET_STRING[index] && face !== '？';
+                const charColor = isRolling ? '#ddd' : (isMatch ? POSITION_COLORS[index] : MISMATCH_COLOR);
+                const shadowStyle = isMatch 
+                    ? `0 10px 0 ${charColor}20, inset 0 -4px 0 ${charColor}10` 
+                    : `0 10px 0 #f0f0f0`;
+                const borderStyle = `3px solid ${isMatch ? charColor + '40' : '#f8f8f8'}`;
+
+                return `
+                    <div class="dice-slot text-4xl md:text-6xl font-black rounded-3xl ${isRolling ? 'is-rolling' : ''}"
+                         style="color: ${charColor}; box-shadow: ${shadowStyle}; border: ${borderStyle};">
+                        ${face}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderButton() {
+            const container = document.getElementById('button-container');
+            if (gameStatus === 'won') {
+                container.innerHTML = `
+                    <button onclick="resetGame()" class="btn-roll px-10 py-4 rounded-full font-black text-xl text-white shadow-lg" style="background-color: ${COLORS.ma2}">
+                        もう一度遊ぶ
+                    </button>
+                `;
+            } else if (isRolling) {
+                container.innerHTML = `
+                    <div class="px-14 py-5 font-black text-2xl text-slate-300 animate-pulse">ROLLING...</div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <button onclick="rollDice()" class="btn-roll px-14 py-5 rounded-full font-black text-2xl text-white shadow-lg" style="background-color: ${COLORS.ya1}; box-shadow: 0 8px 0 ${COLORS.ya1}cc">
+                        ${rollCount === 0 ? 'START' : 'ROLL'}
+                    </button>
+                `;
+            }
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('history-container');
+            container.innerHTML = history.map(item => `
+                <div class="flex justify-between items-center px-4 py-1 text-xs font-bold text-slate-400">
+                    <span>#${item.count}</span>
+                    <span class="tracking-[0.3em] font-black">${item.result}</span>
+                    <div class="w-2 h-2 rounded-full ${item.isWin ? 'bg-pink-400' : 'bg-slate-200'}"></div>
+                </div>
+            `).join('');
+        }
+
+        function rollDice() {
+            if (isRolling) return;
+            isRolling = true;
+            gameStatus = 'rolling';
+            renderButton();
+            
+            let tick = 0;
+            timer = setInterval(() => {
+                dice = dice.map(() => DIE_FACES[Math.floor(Math.random() * DIE_FACES.length)]);
+                renderDice();
+                tick++;
+                if (tick > 6) {
+                    clearInterval(timer);
+                    finalizeRoll();
+                }
+            }, 40);
+        }
+
+        function finalizeRoll() {
+            dice = Array(4).fill(null).map(() => DIE_FACES[Math.floor(Math.random() * DIE_FACES.length)]);
+            rollCount++;
+            document.getElementById('count-display').innerText = rollCount;
+            
+            const isWin = dice.every((face, index) => face === TARGET_STRING[index]);
+            gameStatus = isWin ? 'won' : 'idle';
+            isRolling = false;
+
+            history = [{ result: dice.join(''), count: rollCount, isWin: isWin }, ...history].slice(0, 3);
+            
+            renderDice();
+            renderButton();
+            renderHistory();
+        }
+
+        function resetGame() {
+            dice = ['？', '？', '？', '？'];
+            rollCount = 0;
+            document.getElementById('count-display').innerText = rollCount;
+            gameStatus = 'idle';
+            history = [];
+            renderDice();
+            renderButton();
+            renderHistory();
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
